@@ -273,7 +273,7 @@ export default function AdminDashboard({ user }) {
       </div>
 
       {/* Add custom CSS for the new colors */}
-      <style jsx>{`
+      {/* <style jsx>{`
         .text-purple {
           color: #6f42c1 !important;
         }
@@ -286,7 +286,7 @@ export default function AdminDashboard({ user }) {
         .bg-teal {
           background-color: #20c997 !important;
         }
-      `}</style>
+      `}</style> */}
     </div>
   );
 }

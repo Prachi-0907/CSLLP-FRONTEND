@@ -54,14 +54,14 @@ export default function UserCourses({ user }) {
   const loadReminderSystemData = async () => {
     try {
       // Load pending reminders
-      const pendingRes = await fetch('http://localhost:8090/courses/admin/reminders/pending');
+      const pendingRes = await fetch('http://localhost:8088/courses/admin/reminders/pending');
       const pendingData = await pendingRes.json();
       if (pendingData.success) {
         setPendingReminders(pendingData.data || []);
       }
 
       // Load system status
-      const statusRes = await fetch('http://localhost:8090/courses/admin/reminders/status');
+      const statusRes = await fetch('http://localhost:8088/courses/admin/reminders/status');
       const statusData = await statusRes.json();
       if (statusData.success) {
         setSystemStatus(statusData.data);
@@ -91,7 +91,7 @@ export default function UserCourses({ user }) {
     if (window.confirm('Send automatic reminders to all employees with low progress after 15 days?')) {
       setSendingReminders(true);
       try {
-        const response = await fetch('http://localhost:8090/courses/admin/reminders/send-automatic', {
+        const response = await fetch('http://localhost:8088/courses/admin/reminders/send-automatic', {
           method: 'POST'
         });
         const result = await response.json();
@@ -132,15 +132,53 @@ export default function UserCourses({ user }) {
     emp.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getEmployeeStats = (employeeId) => {
-    const employeeEnrollments = enrollments.filter(e => e.employeeId === employeeId);
-    const total = employeeEnrollments.length;
-    const completed = employeeEnrollments.filter(e => e.progress === 100 && e.status === 'COMPLETED').length;
-    const inProgress = employeeEnrollments.filter(e => e.progress > 0 && e.progress < 100).length;
-    const notStarted = employeeEnrollments.filter(e => e.progress === 0).length;
+  // const getEmployeeStats = (employeeId) => {
+  //   const employeeEnrollments = enrollments.filter(e => e.employeeId === employeeId);
+  //   const total = employeeEnrollments.length;
+  //   const completed = employeeEnrollments.filter(e => e.progress >= 100 && e.status === 'COMPLETED').length;
+  //   const inProgress = employeeEnrollments.filter(e => e.progress > 0 && e.progress < 100).length;
+  //   const notStarted = employeeEnrollments.filter(e => e.progress === 0).length;
     
-    return { total, completed, inProgress, notStarted };
+  //   return { total, completed, inProgress, notStarted };
+  // };
+  const getEmployeeStats = (employeeId) => {
+  const employeeEnrollments = enrollments.filter(
+    e => e.employeeId === employeeId
+  );
+
+  const total = employeeEnrollments.length;
+
+  const completed = employeeEnrollments.filter(
+    e => e.progress >= 100
+  ).length;
+
+  const inProgress = employeeEnrollments.filter(
+    e => e.progress > 0 && e.progress < 100
+  ).length;
+
+  const notStarted = employeeEnrollments.filter(
+    e => e.progress === 0
+  ).length;
+
+  // NEW: Average overall progress
+  const overallProgress =
+    total > 0
+      ? Math.round(
+          employeeEnrollments.reduce(
+            (sum, e) => sum + (e.progress || 0),
+            0
+          ) / total
+        )
+      : 0;
+
+  return {
+    total,
+    completed,
+    inProgress,
+    notStarted,
+    overallProgress
   };
+};
 
   // 🆕 NEW: Get reminder stats for employee
   const getEmployeeReminderStats = (employeeId) => {
@@ -228,7 +266,7 @@ export default function UserCourses({ user }) {
   if (loading) return <div className="text-center p-4">Loading employee data...</div>;
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid px-3 px-md-4 py-4 ">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="mb-1 fw-bold">📈 User Courses & Progress</h2>
@@ -236,10 +274,11 @@ export default function UserCourses({ user }) {
             Monitor employee learning progress with automatic reminders
           </small>
         </div>
-        <div className="d-flex gap-2">
+        {/* <div className="d-flex gap-2"> */}
+        <div className="d-flex flex-wrap gap-2 justify-content-center justify-content-md-end">
           {/* 🆕 NEW: Automatic Reminder System Status */}
           {systemStatus && (
-            <div className="alert alert-info mb-0 me-2 py-2">
+            <div className="alert alert-info alert-sm px-2 shadow-sm mb-0 me-2 py-2" style={{ width: "fit-content", height: "fit-content" }}>
               <small>
                 <strong>Auto-Reminders:</strong> {systemStatus.systemStatus} • 
                 <strong> Next:</strong> {new Date(systemStatus.nextRun).toLocaleString()} •
@@ -248,7 +287,7 @@ export default function UserCourses({ user }) {
             </div>
           )}
           
-          <button 
+          {/* <button 
             className="btn btn-outline-primary" 
             onClick={() => {
               loadInitialData();
@@ -256,11 +295,12 @@ export default function UserCourses({ user }) {
             }}
           >
             🔄 Refresh
-          </button>
+          </button> */}
           
           {/* 🆕 NEW: Trigger Automatic Reminders Button */}
           <button
-            className="btn btn-warning"
+            className="btn btn-warning btn-sm px-2 shadow-sm"
+            style={{ width: "fit-content" }}
             onClick={triggerAutomaticReminders}
             disabled={sendingReminders || pendingReminders.length === 0}
           >
@@ -279,21 +319,23 @@ export default function UserCourses({ user }) {
       </div>
 
       {/* Search Section */}
-      <div className="row mb-4">
-        <div className="col-md-6">
-          <div className="input-group">
-            <span className="input-group-text">🔍</span>
+      <div className="row mb-4 align-items-center">
+        <div className="col-md-6 mb-3 mb-md-0">
+          <div className="input-group shadow-sm rounded-full overflow-hidden" style={{transition: "0.3s ease",}}>
+            <span className="input-group-text bg-info text-white border-0">🔍</span>
             <input
               type="text"
-              className="form-control"
+              className="form-control border-0"
               placeholder="Search employees by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              style={{boxShadow: "none", transition: "0.3s ease"}}
             />
           </div>
         </div>
         <div className="col-md-6">
-          <div className="form-text">
+          {/* <div className="form-text"> */}
+          <div className='d-flex flex-wrap justify-content-md-end gap-2'>
             Showing {currentEmployees.length} of {filteredEmployees.length} employees • {employees.length} total employees •
             <span className="text-warning ms-2">
               ⚠️ {pendingReminders.length} need reminders
@@ -303,12 +345,23 @@ export default function UserCourses({ user }) {
       </div>
 
       {/* Employees List */}
-      <div className="row">
-        <div className="col-md-5">
-          <div className="card">
-            <div className="card-header bg-light d-flex justify-content-between align-items-center">
-              <h5 className="card-title mb-0">👥 Employees</h5>
-              <div className="d-flex align-items-center gap-2">
+      <div className="row justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+        {/* <div className="col-md-5"> */}
+        <div className="col-18 col-md-18 col-lg-18 col-xl-18">
+          <div className="card shadow-sm border-0 rounded-4 h-100 border-purple-500">
+            {/* <div className="card-header bg-light d-flex justify-content-between align-items-center"> */}
+            <div className="card-header bg-light py-3">
+              {/* <h5 className="card-title mb-0">👥 Employees</h5> */}
+              <h4 className="fw-bold text-center mb-3">
+                {selectedEmployee
+                  ? `📚 Course Progress for ${
+                      employees.find(e => e.id === selectedEmployee)?.firstName
+                    } ${
+                      employees.find(e => e.id === selectedEmployee)?.lastName
+                    }`
+                  : '📚 Select an Employee'}
+              </h4>
+              <div className="d-flex justify-content-center align-items-center gap-2">
                 {/* Custom Dropdown for employees per page */}
                 <div className="employee-dropdown-container position-relative">
                   <button 
@@ -355,7 +408,7 @@ export default function UserCourses({ user }) {
                 <span className="badge bg-secondary">{filteredEmployees.length}</span>
               </div>
             </div>
-            <div className="card-body p-0" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+            <div className="card-body p-4" style={{ maxHeight: '600px', overflowY: 'auto' }}>
               {filteredEmployees.length === 0 ? (
                 <div className="text-center p-4">
                   <p className="text-muted">No employees found</p>
@@ -371,7 +424,7 @@ export default function UserCourses({ user }) {
                       return (
                         <div
                           key={employee.id}
-                          className={`list-group-item list-group-item-action ${
+                          className={`list-group-item list-group-item-action py-3 px-3 ${
                             selectedEmployee === employee.id ? 'active' : ''
                           } ${needsReminder ? 'border-warning border-start-4' : ''}`}
                           style={{ cursor: 'pointer' }}
@@ -392,12 +445,33 @@ export default function UserCourses({ user }) {
                               </small>
                               
                               {/* Progress Stats */}
-                              <div className="mt-2">
-                                <div className="d-flex justify-content-between small">
-                                  <span>Total: {stats.total}</span>
-                                  <span className="text-success">Completed: {stats.completed}</span>
+                              {/* <div className="mt-2">
+                                <div className="d-flex justify-content-between flex-wrap gap-2 small fw-semibold">
+                                  <span className="text-black">Total: {stats.total}</span>
+                                  <span className="text-success-emphasis">Completed: {stats.completed}</span>
                                   <span className="text-warning">In Progress: {stats.inProgress}</span>
-                                  <span className="text-secondary">Not Started: {stats.notStarted}</span>
+                                  <span className="text-info">Not Started: {stats.notStarted}</span>
+                                </div>
+                              </div> */}
+                              <div className="mt-2  p-2 rounded">
+                                <div className="d-flex justify-content-between flex-wrap gap-2 small fw-semibold">
+
+                                  <span className="text-danger">
+                                    Total: {stats.total}
+                                  </span>
+
+                                  <span style={{ color: "#7CFC00" }}>
+                                    Completed: {stats.completed}
+                                  </span>
+
+                                  <span style={{ color: "#FFD700" }}>
+                                    In Progress: {stats.inProgress}
+                                  </span>
+
+                                  <span style={{ color: "#FFB6C1" }}>
+                                    Not Started: {stats.notStarted}
+                                  </span>
+
                                 </div>
                               </div>
 
@@ -417,20 +491,21 @@ export default function UserCourses({ user }) {
                           
                           {/* Progress Bar */}
                           <div className="mt-2">
-                            <div className="progress" style={{ height: '8px' }}>
+                            {/* <div className="progress" style={{ height: '8px' }}> */}
+                            <div className="progress rounded-full" style={{ height: '12px' }}>
                               <div
                                 className="progress-bar bg-success"
-                                style={{ width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%` }}
+                                style={{ width: `${stats.overallProgress}%` }}
                                 title={`${stats.completed} completed`}
                               ></div>
                               <div
                                 className="progress-bar bg-warning"
-                                style={{ width: `${stats.total > 0 ? (stats.inProgress / stats.total) * 100 : 0}%` }}
+                                style={{ width: `${stats.overallProgress}%` }}
                                 title={`${stats.inProgress} in progress`}
                               ></div>
                             </div>
                             <small className={selectedEmployee === employee.id ? 'text-light' : 'text-muted'}>
-                              Overall Progress: {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
+                              Overall Progress: {stats.overallProgress}%
                             </small>
                           </div>
                         </div>
@@ -496,12 +571,22 @@ export default function UserCourses({ user }) {
         </div>
 
         {/* Selected Employee Details */}
-        <div className="col-md-7">
-          <div className="card">
-            <div className="card-header bg-light d-flex justify-content-between align-items-center">
-              <h5 className="card-title mb-0">
+        {/* <div className="col-md-7"> */}
+        <div className="col-18 col-md-18 col-lg-18 col-xl-18">
+          <div className="card shadow-sm border-0 rounded-4 h-100 border-purple-500">
+            <div className="card-header bg-light d-flex ">
+              {/* <h5 className="card-title mb-0">
                 {selectedEmployee ? `📚 Course Progress for ${employees.find(e => e.id === selectedEmployee)?.firstName} ${employees.find(e => e.id === selectedEmployee)?.lastName}` : 'Select an employee'}
-              </h5>
+              </h5> */}
+              <h4 className="fw-bold mb-3">
+                {selectedEmployee
+                  ? `📚 Course Progress for ${
+                      employees.find(e => e.id === selectedEmployee)?.firstName
+                    } ${
+                      employees.find(e => e.id === selectedEmployee)?.lastName
+                    }`
+                  : '📚 Select an Employee'}
+              </h4>
               <div className="d-flex align-items-center gap-2">
                 {selectedEmployee && enrollments.length > 0 && (
                   <>
@@ -552,7 +637,7 @@ export default function UserCourses({ user }) {
                 )}
               </div>
             </div>
-            <div className="card-body">
+            <div className="card-body p-4">
               {!selectedEmployee ? (
                 <div className="text-center p-4">
                   <div className="text-muted mb-3" style={{ fontSize: '3rem' }}>👆</div>
@@ -568,8 +653,8 @@ export default function UserCourses({ user }) {
               ) : (
                 <>
                   <div className="table-responsive">
-                    <table className="table table-striped table-hover">
-                      <thead className="table-dark">
+                    <table className="table table-striped table-hover align-middle">
+                      <thead className="table-warning">
                         <tr>
                           <th>Course</th>
                           <th>Progress</th>
@@ -597,7 +682,8 @@ export default function UserCourses({ user }) {
                               </td>
                               <td>
                                 <div className="d-flex align-items-center">
-                                  <div className="progress flex-grow-1 me-2" style={{ height: '10px' }}>
+                                  {/* <div className="progress flex-grow-1 me-2" style={{ height: '10px' }}> */}
+                                  <div className="progress rounded-pill" style={{ height: '12px' }}>
                                     <div
                                       className={`progress-bar ${
                                         enrollment.progress === 100 ? 'bg-success' :
@@ -701,43 +787,43 @@ export default function UserCourses({ user }) {
                   )}
 
                   {/* Summary Stats */}
-                  <div className="row mt-4">
-                    <div className="col-md-2 text-center">
-                      <div className="card bg-primary text-white">
-                        <div className="card-body py-2">
-                          <h5>{enrollments.length}</h5>
+                  <div className="row row-cols-2 row-cols-sm-3 row-cols-md-6 mt-4 g-2 text-center">
+                    <div className="col text-center">
+                      <div className="card bg-primary text-white shadow-sm h-100">
+                        <div className="card-body py-3 px-2">
+                          <h5 className='fw-bold mb-1'>{enrollments.length}</h5>
                           <small>Total</small>
                         </div>
                       </div>
                     </div>
-                    <div className="col-md-2 text-center">
-                      <div className="card bg-success text-white">
-                        <div className="card-body py-2">
-                          <h5>{enrollments.filter(e => e.progress === 100).length}</h5>
+                    <div className="col text-center">
+                      <div className="card bg-success text-white shadow-sm h-100">
+                        <div className="card-body py-3 px-2">
+                          <h5 className='fw-bold mb-1'>{enrollments.filter(e => e.progress === 100).length}</h5>
                           <small>Completed</small>
                         </div>
                       </div>
                     </div>
-                    <div className="col-md-2 text-center">
-                      <div className="card bg-warning text-white">
-                        <div className="card-body py-2">
-                          <h5>{enrollments.filter(e => e.progress > 0 && e.progress < 100).length}</h5>
+                    <div className="col text-center">
+                      <div className="card bg-warning text-white shadow-sm h-100">
+                        <div className="card-body py-3 px-2">
+                          <h5 className='fw-bold mb-1'>{enrollments.filter(e => e.progress > 0 && e.progress < 100).length}</h5>
                           <small>In Progress</small>
                         </div>
                       </div>
                     </div>
-                    <div className="col-md-2 text-center">
-                      <div className="card bg-secondary text-white">
-                        <div className="card-body py-2">
-                          <h5>{enrollments.filter(e => e.progress === 0).length}</h5>
+                    <div className="col text-center">
+                      <div className="card bg-secondary text-white shadow-sm h-100">
+                        <div className="card-body py-3 px-2">
+                          <h5 className='fw-bold mb-1'>{enrollments.filter(e => e.progress === 0).length}</h5>
                           <small>Not Started</small>
                         </div>
                       </div>
                     </div>
-                    <div className="col-md-2 text-center">
-                      <div className="card bg-danger text-white">
-                        <div className="card-body py-2">
-                          <h5>{enrollments.filter(e => 
+                    <div className="col text-center">
+                      <div className="card bg-danger text-white shadow-sm h-100">
+                        <div className="card-body py-3 px-2">
+                          <h5 className='fw-bold mb-1'>{enrollments.filter(e => 
                             e.enrolledAt && 
                             Math.floor((new Date() - new Date(e.enrolledAt)) / (1000 * 60 * 60 * 24)) > 15 &&
                             e.progress < 50
@@ -746,10 +832,10 @@ export default function UserCourses({ user }) {
                         </div>
                       </div>
                     </div>
-                    <div className="col-md-2 text-center">
-                      <div className="card bg-info text-white">
-                        <div className="card-body py-2">
-                          <h5>{getEmployeeReminderStats(selectedEmployee).totalReminders}</h5>
+                    <div className="col text-center">
+                      <div className="card bg-info text-white shadow-sm h-100">
+                        <div className="card-body py-3 px-2">
+                          <h5 className='fw-bold mb-1'>{getEmployeeReminderStats(selectedEmployee).totalReminders}</h5>
                           <small>Need Reminder</small>
                         </div>
                       </div>

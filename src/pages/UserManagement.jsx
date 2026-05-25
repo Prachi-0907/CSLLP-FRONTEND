@@ -604,7 +604,7 @@ export default function UserManagement({ currentUser }) {
               </select>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-              <button onClick={() => setEditUser(null)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d1d5db', background: '#f3f4f6' }}>Cancel</button>
+              <button onClick={() => setEditUser(null)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d1d5db', color: 'white', background: 'rgb(26, 86, 219)' }}>Cancel</button>
               <button
                 onClick={() => handleUpdate(editUser.id, editUser)}
                 style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1a56db', color: '#fff' }}
