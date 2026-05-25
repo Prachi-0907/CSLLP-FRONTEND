@@ -7,7 +7,7 @@ const MATERIAL_BASE = process.env.REACT_APP_MATERIAL_SERVICE || 'http://localhos
 const EXAM_BASE = process.env.REACT_APP_EXAM_SERVICE || 'http://localhost:8083/api/exams';
 const NOTIF_BASE = process.env.REACT_APP_NOTIFICATION_SERVICE || 'http://localhost:8089';
 const FEEDBACK_BASE = process.env.REACT_APP_FEEDBACK_SERVICE || 'http://localhost:8087';
-const CERTIFICATE_BASE = process.env.REACT_APP_CERTIFICATE_SERVICE || 'http://localhost:8084/api/certifications';
+const CERTIFICATE_BASE = process.env.REACT_APP_CERTIFICATE_SERVICE || 'http://localhost:8085/api/certifications';
 
 // 🆕 ADD: Proper response parser for different content types
 async function parseResponse(response) {

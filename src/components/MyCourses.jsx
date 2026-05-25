@@ -915,7 +915,7 @@ export default function MyCourses({ user }) {
                     <div className="card mb-4">
                       <div className="card-header">
                         <h6>📚 Course Content</h6>
-                        <small className="text-muted">Click 'Mark Complete' to track your progress</small>
+                        <small className="text-muted">Click 'Mark Completed' to track your progress</small>
                         {isMandatoryCourse(selectedCourse) && (
                           <div className="mt-1">
                             <small className="text-danger">
@@ -936,7 +936,7 @@ export default function MyCourses({ user }) {
                                 className="btn btn-success btn-sm"
                                 onClick={() => handleMarkComplete("Module", "Introduction to Course")}
                               >
-                                ✅ Mark Complete
+                                ✅ Mark Completed
                               </button>
                             </div>
                           </div>
@@ -1108,7 +1108,7 @@ export default function MyCourses({ user }) {
                           
                           {(selectedCourse.progress === 100 || isMandatoryCourse(selectedCourse)) && (
                             <button
-                              className="btn btn-success w-100"
+                              className="btn btn-primary btn-sm"
                               onClick={() => handleTakeExam(selectedCourse.id, getCourseTitle(selectedCourse))}
                             >
                               🎓 Take Final Exam

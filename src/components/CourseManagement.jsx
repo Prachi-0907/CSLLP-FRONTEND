@@ -277,6 +277,10 @@ function CreateCourseTab({ user, showSuccess, showError }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.materials || formData.materials.length === 0) {
+  alert("Please select at least one material before creating the course.");
+  return;
+}
     setLoading(true);
     
     try {
@@ -441,6 +445,13 @@ function CreateCourseTab({ user, showSuccess, showError }) {
                     <option value="Cybersecurity">Cybersecurity</option>
                     <option value="Soft Skills">Soft Skills</option>
                     <option value="Management">Management</option>
+                    <option value="AI/ML">AI/ML</option>
+                    <option value="Blockchain">Blockchain</option>
+                    <option value="Testing">Software Testing</option>
+                    <option value="UI/UX">UI/UX Design</option>
+                    <option value="Game Dev">Game Development</option>
+                    <option value="Networking">Networking</option>
+                    <option value="IoT">Internet of Things</option>
                   </select>
                 </div>
               </div>
@@ -583,6 +594,9 @@ function CreateCourseTab({ user, showSuccess, showError }) {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                               />
+                              <button className="btn btn-primary">
+                                🔍 Search
+                              </button>
                             </div>
                           </div>
 
@@ -811,7 +825,7 @@ function CourseCatalogTab({ user, showSuccess, showError, showConfirm }) {
         const coursesData = res.body.data || [];
         setCourses(coursesData);
       } else {
-        setCourses([]);
+        setCourses([res.body.data || []]);
         showError("Load Error", "Failed to load courses. Please try again.");
       }
     } catch (error) {

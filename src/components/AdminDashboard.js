@@ -95,7 +95,7 @@ export default function AdminDashboard({ user }) {
       {/* Stats Cards - 4 columns for 8 cards */}
       <div className="stats-grid mb-4" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: '1rem'
       }}>
         {/* Card 1: Total Courses */}

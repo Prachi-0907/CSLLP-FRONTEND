@@ -7,7 +7,7 @@ const CoursesPage = () => {
 
   useEffect(() => {
     getCourses().then(res => setCourses(res.data.data));
-  }, []);
+}, []);
 
   return (
     <div className="p-6 grid grid-cols-3 gap-6">

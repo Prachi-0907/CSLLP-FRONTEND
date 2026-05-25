@@ -9,9 +9,8 @@
 
 .grid-3x3-layout {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  padding: 1rem 0;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
 }
 
 .grid-3x3-item {
@@ -440,4 +439,20 @@ video {
   .modal-content {
     border-radius: 0.5rem;
   }
+}
+
+.study-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.study-card .card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.study-card .btn-group-grid {
+  margin-top: auto;
 }

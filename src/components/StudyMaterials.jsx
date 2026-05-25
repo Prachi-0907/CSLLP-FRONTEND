@@ -1,4 +1,4 @@
-// src/components/StudyMaterials.jsx
+//src/components/searchMaterials.jsx
 import React, { useEffect, useState, useRef } from "react";
 import {
   getMaterials,
@@ -10,8 +10,11 @@ import {
   hasUploadPermission,
   canEditMaterials,
   canDeleteMaterials,
-  getAllCourses
-} from "../services/api";
+  getAllCourses,
+  searchMaterials
+  // uploadMaterials
+} 
+from "../services/api";
 import MessagePopup from "./MessagePopup";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./StudyMaterials.css";
@@ -132,6 +135,14 @@ export default function StudyMaterials() {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
 
+  // for search button modification
+  const [showSearch, setShowSearch] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [tempCategory, setTempCategory] = useState("ALL");
+  const [tempType, setTempType] = useState("ALL");
+
+  
+
   // 🆕 ADDED: Popup State
   const [popup, setPopup] = useState({
     show: false,
@@ -155,12 +166,21 @@ export default function StudyMaterials() {
 
   // filters/search
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name-asc");
   const [filterType, setFilterType] = useState("ALL");
   const [filterCategory, setFilterCategory] = useState("ALL");
 
   const user = loadUserFromStorage();
   const iframeRef = useRef(null);
   const videoRef = useRef(null);
+
+  const getFileName = (fileUrl) => {
+  if (!fileUrl) return "";
+
+  const fullName = fileUrl.split("/").pop();
+
+  return fullName.substring(fullName.indexOf("_") + 1);
+};
 
   // 🆕 ADDED: Popup Helper Functions
   const showPopup = (type, title, message, onConfirm = null) => {
@@ -499,16 +519,36 @@ export default function StudyMaterials() {
     setLoading(false);
   }
 
-  async function fetchCourses() {
-    try {
-      const res = await getAllCourses();
-      if (res.ok && res.body) {
-        setCourses(Array.isArray(res.body) ? res.body : []);
-      }
-    } catch (err) {
-      console.error("Failed to fetch courses", err);
+//   async function fetchCourses() {
+//   try {
+//     const res = await getAllCourses();
+//       if (res.ok && res.body) {
+//         setCourses(Array.isArray(res.body) ? res.body : []);
+//       }
+//   } catch (err) {
+//     console.error("Failed to fetch courses", err);
+//     setCourses([]);
+//   }
+// }
+async function fetchCourses() {
+  try {
+    const res = await getAllCourses();
+    console.log("Courses response:", res);
+    if (res.ok && res.body && res.body.success) {
+      setCourses(res.body.data || []);
+    } else if (res.ok && res.body && Array.isArray(res.body.data)) {
+      setCourses(res.body.data);
+    } else if (res.ok && res.body && Array.isArray(res.body)) {
+      setCourses(res.body);
+    } else {
+      setCourses([]);
     }
+  } catch (err) {
+    console.error("Failed to fetch courses", err);
+    setCourses([]);
   }
+}
+
 
   function resetForm() {
     setTitle("");
@@ -614,18 +654,57 @@ export default function StudyMaterials() {
   }
 
   // filters
+  // const filtered = materials.filter((m) => {
+  //   const matchSearch =
+  //     !search ||
+  //     (m.title && m.title.toLowerCase().includes(search.toLowerCase())) ||
+  //     (m.tags && m.tags.toLowerCase().includes(search.toLowerCase()));
+  //   const matchType =
+  //     filterType === "ALL" || getMaterialType(m) === filterType;
+  //   const matchCategory =
+  //     filterCategory === "ALL" ||
+  //     (m.category || "") === filterCategory;
+  //   return matchSearch && matchType && matchCategory;
+  // });
+
+  //filters
   const filtered = materials.filter((m) => {
-    const matchSearch =
-      !search ||
-      (m.title && m.title.toLowerCase().includes(search.toLowerCase())) ||
-      (m.tags && m.tags.toLowerCase().includes(search.toLowerCase()));
-    const matchType =
-      filterType === "ALL" || getMaterialType(m) === filterType;
-    const matchCategory =
-      filterCategory === "ALL" ||
-      (m.category || "") === filterCategory;
-    return matchSearch && matchType && matchCategory;
-  });
+  const matchSearch =
+    !search ||
+    (m.title && m.title.toLowerCase().includes(search.toLowerCase())) ||
+    (m.tags && m.tags.toLowerCase().includes(search.toLowerCase()));
+  const matchType =
+    filterType === "ALL" || getMaterialType(m) === filterType;
+  const matchCategory =
+    filterCategory === "ALL" ||
+      (m.tags &&
+        m.tags
+          .split(",")
+          .map((t) => t.trim().toLowerCase())
+          .includes(filterCategory.toLowerCase()));
+  return matchSearch && matchType && matchCategory;
+});
+
+const sortedMaterials = [...filtered].sort((a, b) => {
+
+  if (sortBy === "name-asc") {
+    return a.title.localeCompare(b.title);
+  }
+
+  if (sortBy === "name-desc") {
+    return b.title.localeCompare(a.title);
+  }
+
+  if (sortBy === "newest") {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  }
+
+  if (sortBy === "oldest") {
+    return new Date(a.createdAt) - new Date(b.createdAt);
+  }
+
+  return 0;
+});
 
   return (
     <div className="container-fluid page-padding">
@@ -683,9 +762,9 @@ export default function StudyMaterials() {
         )}
       </div>
 
-      {/* Search & Filter */}
+      {/* Search & Filter
       <div className="card mb-4">
-        <div className="card-body">
+        <div className="card-body d-flex flex-column">
           <div className="row g-3">
             <div className="col-md-6">
               <div className="input-group">
@@ -707,6 +786,22 @@ export default function StudyMaterials() {
                 <option value="ALL">All Categories</option>
                 <option value="Frontend">Frontend</option>
                 <option value="Backend">Backend</option>
+                <option value="Fullstack">Fullstack Development</option>
+                <option value="DevOps">DevOps</option>
+                <option value="Data Science">Data Science</option>
+                <option value="Mobile">Mobile Development</option>
+                <option value="Cloud">Cloud Computing</option>
+                <option value="Cybersecurity">Cybersecurity</option>
+                <option value="Soft Skills">Soft Skills</option>
+                <option value="Management">Management</option>
+                <option value="AI/ML">AI/ML</option>
+                <option value="Blockchain">Blockchain</option>
+                <option value="Testing">Software Testing</option>
+                <option value="UI/UX">UI/UX Design</option>
+                <option value="Game Dev">Game Development</option>
+                <option value="Networking">Networking</option>
+                <option value="IoT">Internet of Things</option>
+                
               </select>
             </div>
             <div className="col-md-3">
@@ -724,10 +819,146 @@ export default function StudyMaterials() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      {/* 🆕 UPDATED: Upload/Edit Form Modal */}
-      {showForm && (
+      {/* Search & Filter */}
+    <div className="d-flex justify-content-between align-items-center mb-4">
+
+    <div className="d-flex align-items-center gap-2">
+
+      {/* Search Icon */}
+      <button
+        className="btn btn-outline-secondary"
+        onClick={() => setShowSearch(!showSearch)}
+      >
+        🔍
+      </button>
+
+      {/* Search Input */}
+      {showSearch && (
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search materials..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: "220px" }}
+        />
+      )}
+
+      {/* Filter Toggle */}
+      <button
+        className="btn btn-outline-primary"
+        onClick={() => setShowFilters(!showFilters)}
+      >
+        Filters
+      </button>
+
+      <select
+        className="form-select"
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+        style={{ width: "160px" }}
+      >
+        <option value="name-asc">A → Z</option>
+        <option value="name-desc">Z → A</option>
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+      </select>
+
+    </div>
+  </div>
+
+  {/* Filters Section */}
+  {showFilters && (
+    <div className="card mb-4">
+      <div className="card-body">
+
+        <div className="row g-3 align-items-end">
+
+          {/* Category */}
+          <div className="col-md-4">
+            <label className="form-label">Category</label>
+
+            <select
+              className="form-select"
+              value={tempCategory}
+              onChange={(e) => setTempCategory(e.target.value)}
+            >
+              <option value="ALL">All Categories</option>
+              <option value="Frontend">Frontend</option>
+              <option value="Backend">Backend</option>
+              <option value="Fullstack">Fullstack Development</option>
+              <option value="DevOps">DevOps</option>
+              <option value="Data Science">Data Science</option>
+              <option value="Mobile">Mobile Development</option>
+              <option value="Cloud">Cloud Computing</option>
+              <option value="Cybersecurity">Cybersecurity</option>
+              <option value="Soft Skills">Soft Skills</option>
+              <option value="Management">Management</option>
+              <option value="AI/ML">AI/ML</option>
+              <option value="Blockchain">Blockchain</option>
+              <option value="Testing">Software Testing</option>
+              <option value="UI/UX">UI/UX Design</option>
+              <option value="Game Dev">Game Development</option>
+              <option value="Networking">Networking</option>
+              <option value="IoT">Internet of Things</option>
+            </select>
+          </div>
+
+          {/* Type */}
+          <div className="col-md-4">
+            <label className="form-label">Type</label>
+
+            <select
+              className="form-select"
+              value={tempType}
+              onChange={(e) => setTempType(e.target.value)}
+            >
+              <option value="ALL">All Types</option>
+              <option value="DOCUMENT">Document</option>
+              <option value="VIDEO">Video</option>
+              <option value="PDF">PDF</option>
+              <option value="LINK">Link</option>
+            </select>
+          </div>
+
+          {/* Apply Button */}
+          <div className="col-md-4 d-flex gap-2">
+
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => {
+                setFilterCategory(tempCategory);
+                setFilterType(tempType);
+              }}
+            >
+              Apply Filter
+            </button>
+
+            <button
+              className="btn btn-outline-secondary"
+              onClick={() => {
+                setTempCategory("ALL");
+                setTempType("ALL");
+
+                setFilterCategory("ALL");
+                setFilterType("ALL");
+              }}
+            >
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  )}
+
+        {/* 🆕 UPDATED: Upload/Edit Form Modal */}
+        {showForm && (
         <div className="form-modal-overlay" onClick={() => setShowForm(false)}>
           <div className="form-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="form-modal-header">
@@ -818,6 +1049,11 @@ export default function StudyMaterials() {
                       required={!editingMaterial}
                       disabled={actionLoading === 'submit'}
                     />
+                    {editingMaterial && editingMaterial.fileUrl && !file && (
+                      <small className="text-success d-block mt-2">
+                        Current File: {getFileName(editingMaterial.fileUrl)}
+                      </small>
+                    )}
                     <small className="text-muted">
                       {editingMaterial ? 
                         "Leave empty to keep current file. For videos: MP4, WebM, or OGG formats recommended." : 
@@ -905,10 +1141,10 @@ export default function StudyMaterials() {
               </div>
             ) : (
               <div className="grid-3x3-layout">
-                {filtered.map((m) => (
-                  <div className="grid-3x3-item" key={m.id}>
+                {sortedMaterials.map((m) => (
+                  <div className="grid-3x3-item" key={m.id} style={{ minHeight: "240px" }}>
                     <div className="card study-card h-100 shadow-sm">
-                      <div className="card-body d-flex flex-column">
+                      <div className="card-body d-flex flex-column" style={{ padding: "1rem" }}>
                         <div className="d-flex justify-content-between align-items-start mb-3">
                           <div className="d-flex align-items-center gap-2">
                             <span className="type-icon" style={{ fontSize: "1.5rem" }}>
@@ -921,24 +1157,28 @@ export default function StudyMaterials() {
                           </span>
                         </div>
 
-                        <p className="text-muted small mb-3 flex-grow-1">
+                        <p className="text-muted mb-2"
+                            style={{
+                              fontSize: "0.85rem",
+                              lineHeight: 1.4
+                            }}>
                           {m.description || "No description provided"}
                         </p>
 
-                        <div className="mb-3">
+                        <div className="mb-2">
                           {m.tags &&
                             m.tags.split(",").map((t, i) => (
-                              <span key={i} className="badge tag-badge me-1 mb-1">
+                              <span key={i} className="badge tag-badge me-1">
                                 #{t.trim()}
                               </span>
                             ))}
                         </div>
 
-                        <div className="mt-auto">
-                          <div className="d-flex flex-wrap gap-2 align-items-center btn-group-grid">
+                        <div className="mt-auto"><div className="d-flex gap-2 flex-wrap mt-2">
+                          
                             {getMaterialType(m) === "VIDEO" ? (
                               <button
-                                className={`btn btn-sm action-btn ${getButtonClass(m)} flex-fill`}
+                                className={`btn btn-sm action-btn ${getButtonClass(m)}`}
                                 onClick={() => handleVideoClick(m)}
                                 disabled={actionLoading}
                               >
@@ -946,7 +1186,7 @@ export default function StudyMaterials() {
                               </button>
                             ) : (
                               <button
-                                className={`btn btn-sm action-btn ${getButtonClass(m)} flex-fill`}
+                                className={`btn btn-sm action-btn ${getButtonClass(m)}`}
                                 onClick={() => handleDocumentClick(m)}
                                 disabled={actionLoading}
                               >
@@ -955,7 +1195,7 @@ export default function StudyMaterials() {
                             )}
                             
                             <button
-                              className="btn btn-sm btn-outline-success flex-fill"
+                              className="btn btn-sm btn-outline-success"
                               onClick={() => handleDownload(m)}
                               title="Download this file"
                               disabled={actionLoading === m.id}
@@ -1127,7 +1367,7 @@ export default function StudyMaterials() {
             )}
 
             <div className="text-center mt-3">
-              <div className="btn-group">
+              <div className="btn-group-grid mt-auto">
                 <button
                   className="btn btn-outline-light btn-sm"
                   onClick={() => handleDownload(selectedVideo)}
