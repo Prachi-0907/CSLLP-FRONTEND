@@ -122,8 +122,8 @@ export default function CourseEnrollment({ user }) {
   const loadCourses = async () => {
     try {
       const res = await getCourses();
-      if (res.ok && res.body && res.body.success) {
-        setCourses(res.body.data || []);
+      if (res.success) {
+        setCourses(res.data || []);
       } else {
         setCourses([]);
       }
@@ -139,8 +139,8 @@ export default function CourseEnrollment({ user }) {
   const loadMyEnrollments = async () => {
     try {
       const res = await getMyCourses(user.id);
-      if (res.ok && res.body && res.body.success) {
-        setEnrolledCourses(res.body.data || []);
+      if (res.success) {
+        setEnrolledCourses(res.data || []);
       }
     } catch (error) {
       console.error("Failed to load enrollments:", error);
@@ -271,8 +271,8 @@ export default function CourseEnrollment({ user }) {
 
       const res = await enrollCourse(enrollmentData);
 
-      if (res.ok && res.body && res.body.success) {
-        const enrollment = res.body.data;
+      if (res.success) {
+        const enrollment = res.data;
         
         setEnrolledCourses(prev => [...prev, enrollment]);
         

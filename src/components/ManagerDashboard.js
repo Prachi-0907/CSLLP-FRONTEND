@@ -40,8 +40,9 @@ export default function ManagerDashboard({ user }) {
     setLoading(true);
     try {
       const res = await getUsers(user.id);
-      if (res.ok) {
-        const teamData = res.body.data || [];
+      console.log("get team member :",res);
+      if (res.success) {
+        const teamData = res.data || [];
         setTeam(teamData);
         setFilteredTeam(teamData);
       }
@@ -63,13 +64,13 @@ export default function ManagerDashboard({ user }) {
     };
     
     const res = await authRegister(payload, user.id, 'MANAGER');
-    if (!res.ok) { 
+    if (!res.success) { 
       setMsg({ type: 'error', text: res.body?.message ? res.body.message : 'Error creating employee' }); 
       return; 
     }
     
     // Show success popup
-    setSuccessMessage(`Employee created successfully: ${res.body.data.email}`);
+    setSuccessMessage(`Employee created successfully: ${res.data.email}`);
     setShowSuccessPopup(true);
     
     // Reset form and close modal

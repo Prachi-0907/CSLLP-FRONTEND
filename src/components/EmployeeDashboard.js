@@ -14,8 +14,9 @@ export default function EmployeeDashboard({ user, onLogout }) {
         setLoading(true);
         try {
           const res = await getUserById(user.managerId);
-          if (res.ok && res.body.data) {
-            setManager(res.body.data);
+          console.log("Manager data:",res);
+          if (res.data) {
+            setManager(res.data);
           }
         } catch (error) {
           console.error('Error fetching manager:', error);
@@ -36,14 +37,14 @@ export default function EmployeeDashboard({ user, onLogout }) {
     try {
       // Load my courses
       const coursesRes = await getMyCourses(user.id);
-      if (coursesRes.ok && coursesRes.body.success) {
-        setMyCourses(coursesRes.body.data);
+      if (coursesRes.success) {
+        setMyCourses(coursesRes.data);
       }
 
       // Load enrollments for progress calculation
       const enrollRes = await getEnrollmentsByEmployee(user.id);
-      if (enrollRes.ok && enrollRes.body.success) {
-        setEnrollments(enrollRes.body.data);
+      if (enrollRes.success) {
+        setEnrollments(enrollRes.data);
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);

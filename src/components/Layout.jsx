@@ -57,10 +57,10 @@ export default function Layout({ user, onLogout, children }) {
                 // 👨‍💼 Admin/Manager Navigation  
                 <>
                   <li>
-  <Link to="/study-materials" style={getLinkStyle('/study-materials')}>
-    📚 Study Materials
-  </Link>
-</li>
+                    <Link to="/study-materials" style={getLinkStyle('/study-materials')}>
+                      📚 Study Materials
+                    </Link>
+                  </li>
                   <li>
                     <Link to="/user-courses" style={getLinkStyle('/user-courses')}>
                       👥 User Courses
@@ -82,7 +82,7 @@ export default function Layout({ user, onLogout, children }) {
               {/* Common Pages for All Roles */}
               {/* Common Pages for All Roles */}
 
-{/* ... other common links ... */}
+              {/* ... other common links ... */}
               <li>
                 <Link to="/examinations" style={getLinkStyle('/examinations')}>
                   📝 Examinations

@@ -159,10 +159,11 @@ export default function CourseApprovals({ user }) {
   }, [filter]);
 
   const loadEnrollments = async () => {
+    setLoading(true);
     try {
       const res = await getPendingEnrollments();
-      if (res.ok && res.body && res.body.success) {
-        let filteredData = res.body.data || [];
+      if (res.success) {
+        let filteredData = res.data || [];
         
         if (filter !== "ALL") {
           filteredData = filteredData.filter(e => e.status === filter);
@@ -194,7 +195,7 @@ export default function CourseApprovals({ user }) {
       console.log(`Approving enrollment ${enrollment.id}`);
       const res = await approveEnrollment(enrollment.id);
       
-      if (res.ok && res.body && res.body.success) {
+      if (res.success) {
         // 🆕 IMMEDIATE UI UPDATE
         setEnrollments(prev => 
           prev.map(e => 

@@ -46,8 +46,10 @@ export default function Profile() {
       }
 
       const res = await getUserProfile(currentUser.id);
-      if (res.ok && res.body && res.body.success) {
-        const userData = res.body.data;
+      console.log("Profile Response:",res);
+      if (res.success) {
+        const userData = res.data;
+        console.log("User Data of profile:", userData)
         setUser(userData);
         setFormData({
           firstName: userData.firstName || "",
@@ -57,7 +59,7 @@ export default function Profile() {
           confirmPassword: ""
         });
       } else {
-        showMessage("❌ Failed to load profile: " + (res.body?.message || "Unknown error"), "error");
+        showMessage("❌ Failed to load profile: " + (res.message || "Unknown error"), "error");
       }
     } catch (error) {
       console.error("Profile fetch error:", error);
@@ -102,8 +104,8 @@ export default function Profile() {
 
       const res = await updateUserProfile(currentUser.id, updateData);
       
-      if (res.ok && res.body && res.body.success) {
-        const updatedUser = res.body.data;
+      if (res.success) {
+        const updatedUser = res.data;
         setUser(updatedUser);
         
         // Update local storage with new user data

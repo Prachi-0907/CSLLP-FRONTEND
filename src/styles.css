@@ -1,5 +1,13 @@
 /* src/styles.css */
 
+/*  DROPDOWN-ITEM STYLING */
+.dropdown-item:hover {
+  background-color: #6c757d !important;
+  color: #fff !important;
+  border-radius: 6px;
+  transform: translateX(2px);
+  transition: all 0.2s ease;
+}
 /* ===================== */
 /* RESET & BASE STYLES */
 /* ===================== */
@@ -700,4 +708,41 @@ tr:hover {
     box-shadow: none !important;
     border: 1px solid #000 !important;
   }
+
+  /* Validation Error Styles */
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.border-danger {
+  border-color: #dc3545 !important;
+  border-width: 2px !important;
+}
+
+.is-invalid {
+  border-color: #dc3545 !important;
+  border-width: 2px !important;
+}
+
+.invalid-feedback {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.required-star {
+  color: #dc3545;
+  margin-left: 4px;
+}
+
+.has-error .btn-outline-secondary {
+  border-color: #dc3545;
+  border-width: 2px;
+}
+
+/* Assignment Summary Styles */
+.assignment-summary {
+  background-color: #f0f8ff;
+  border-left: 4px solid #007bff;
+}
 }

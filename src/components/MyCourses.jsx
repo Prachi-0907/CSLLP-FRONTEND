@@ -44,8 +44,8 @@ export default function MyCourses({ user }) {
       const res = await getMyCourses(user.id);
       console.log("📚 DEBUG - Backend response:", res);
       
-      if (res.ok && res.body && res.body.success) {
-        const coursesData = res.body.data || [];
+      if (res.success) {
+        const coursesData = res.data || [];
         console.log("📚 DEBUG - Courses data structure:", coursesData);
         
         setCourses(coursesData);
@@ -82,15 +82,15 @@ export default function MyCourses({ user }) {
           employeeId: user.id
         });
         
-        if (enrollResponse.ok && enrollResponse.body && enrollResponse.body.success) {
+        if (enrollResponse.success) {
           alert("✅ Successfully enrolled in mandatory course! Loading course content...");
           // Refresh courses to get the updated enrollment
           await loadMyCourses();
           
           // Find the updated course with enrollment ID
           const updatedCourses = await getMyCourses(user.id);
-          if (updatedCourses.ok && updatedCourses.body && updatedCourses.body.success) {
-            const updatedCourse = updatedCourses.body.data.find(c => 
+          if (updatedCourses.success) {
+            const updatedCourse = updatedCourses.data.find(c => 
               c.course?.id === course.course.id && c.id
             );
             if (updatedCourse) {
@@ -119,8 +119,8 @@ export default function MyCourses({ user }) {
       }
       
       const res = await getCourseMaterials(courseId);
-      if (res.ok && res.body && res.body.success) {
-        const materials = res.body.data || [];
+      if (res.success) {
+        const materials = res.data || [];
         const materialsWithFlags = materials.map(material => ({
           ...material,
           completed: false
@@ -285,8 +285,8 @@ export default function MyCourses({ user }) {
           employeeId: user.id
         });
         
-        if (enrollResponse.ok && enrollResponse.body && enrollResponse.body.success) {
-          enrollmentId = enrollResponse.body.data.id;
+        if (enrollResponse.success) {
+          enrollmentId = enrollResponse.data.id;
           alert("✅ Successfully enrolled in mandatory course! You can now track progress.");
           
           // Refresh courses to get the new enrollment ID
@@ -294,8 +294,8 @@ export default function MyCourses({ user }) {
           
           // Update selected course with new enrollment ID
           const updatedCourses = await getMyCourses(user.id);
-          if (updatedCourses.ok && updatedCourses.body && updatedCourses.body.success) {
-            const updatedCourse = updatedCourses.body.data.find(c => 
+          if (updatedCourses.success) {
+            const updatedCourse = updatedCourses.data.find(c => 
               c.course?.id === selectedCourse.course.id && c.id
             );
             if (updatedCourse) {
@@ -330,9 +330,9 @@ export default function MyCourses({ user }) {
     try {
       const res = await markContentComplete(numericEnrollmentId, contentType, contentTitle);
       
-      if (res.ok && res.body && res.body.success) {
-        const newProgress = res.body.data.progress;
-        const newStatus = res.body.data.status;
+      if (res.success) {
+        const newProgress = res.data.progress;
+        const newStatus = res.data.status;
         
         alert(`✅ CONTENT COMPLETED\n\nCourse: ${selectedCourse.course?.title}\n\n${contentType}: ${contentTitle}\n\nProgress: ${newProgress}%\nStatus: ${newStatus}\n\nGreat job! 🎉`);
         
@@ -375,7 +375,7 @@ export default function MyCourses({ user }) {
       
       incrementProgress(numericEnrollmentId, progressIncrement)
         .then(res => {
-          if (res.ok && res.body && res.body.success) {
+          if (res.success) {
             console.log(`✅ Video "${material.title}" nearly completed - Progress updated`);
             
             loadMyCourses();
@@ -468,7 +468,7 @@ export default function MyCourses({ user }) {
 
     try {
       const res = await updateProgress(numericEnrollmentId, progressValue);
-      if (res.ok && res.body && res.body.success) {
+      if (res.success) {
         if (!silent) {
           if (progressValue === 100) {
             alert(`✅ PROGRESS UPDATED!\n\nCourse: ${courseTitle}\nNew Progress: 100%\n\n🎉 Course Completed! You can now take the exam.`);
@@ -915,7 +915,7 @@ export default function MyCourses({ user }) {
                     <div className="card mb-4">
                       <div className="card-header">
                         <h6>📚 Course Content</h6>
-                        <small className="text-muted">Click 'Mark Complete' to track your progress</small>
+                        <small className="text-muted">Click 'Mark Completed' to track your progress</small>
                         {isMandatoryCourse(selectedCourse) && (
                           <div className="mt-1">
                             <small className="text-danger">
@@ -936,7 +936,7 @@ export default function MyCourses({ user }) {
                                 className="btn btn-success btn-sm"
                                 onClick={() => handleMarkComplete("Module", "Introduction to Course")}
                               >
-                                ✅ Mark Complete
+                                ✅ Mark Completed
                               </button>
                             </div>
                           </div>
@@ -1108,7 +1108,7 @@ export default function MyCourses({ user }) {
                           
                           {(selectedCourse.progress === 100 || isMandatoryCourse(selectedCourse)) && (
                             <button
-                              className="btn btn-success w-100"
+                              className="btn btn-primary btn-sm"
                               onClick={() => handleTakeExam(selectedCourse.id, getCourseTitle(selectedCourse))}
                             >
                               🎓 Take Final Exam

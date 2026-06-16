@@ -17,7 +17,7 @@ export default function CreateUserModal({ creator, onClose, onCreated }) {
   useEffect(() => {
     (async () => {
       const res = await getUsersByRole('MANAGER');
-      if (res.ok && res.body?.data) setManagers(res.body.data);
+      if (res.data) setManagers(res.data);
     })();
   }, []);
 
@@ -68,7 +68,8 @@ export default function CreateUserModal({ creator, onClose, onCreated }) {
     setBusy(true);
     try {
       const res = await authRegister(payload, creator?.id, creator?.role);
-      if (!res.ok) {
+      console.log("New user:", res);
+      if (!res.success) {
         const msg = res.body?.message || 'Failed to create user';
         setError(msg);
       } else {

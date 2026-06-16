@@ -270,6 +270,10 @@ export default function Feedback({ user }) {
           className="btn btn-primary" 
           onClick={handleOpenFeedbackModal}
           disabled={loading}
+           style={{
+            width: "fit-content",
+            alignSelf: "flex-start"
+  }}
         >
           {loading ? '⏳' : '✨'} Give Feedback
         </button>

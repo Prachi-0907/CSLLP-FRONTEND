@@ -172,25 +172,27 @@ export default function CourseManagement({ user }) {
         onConfirm={popup.onConfirm}
       />
 
-      {/* HEADER WITH REFRESH BUTTON ON RIGHT SIDE */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1 fw-bold">⚙️ Course Management</h2>
-          <small className="text-muted">
-            Manage courses and assignments
-          </small>
-        </div>
-        <div className="d-flex gap-2 align-items-center">
-          <span className="me-3">Welcome, {user.name}</span>
-          <button 
-            className="btn btn-outline-primary btn-sm"
-            onClick={handleRefresh}
-            title="Refresh data"
-          >
-            🔄 Refresh
-          </button>
-        </div>
+     <div className="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <div className="d-flex align-items-center gap-2 mb-1">
+      <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>⚙️</span>
+      <div>
+        <h2 className="mb-0 fw-bold">Course Management</h2>
+        <small className="text-muted">Manage courses and assignments</small>
       </div>
+    </div>
+  </div>
+  <div className="d-flex gap-2 align-items-center">
+    <span className="me-3">Welcome, {user.name}</span>
+    <button
+      className="btn btn-outline-primary btn-sm"
+      onClick={handleRefresh}
+      title="Refresh data"
+    >
+      🔄 Refresh
+    </button>
+  </div>
+</div>
 
       <ul className="nav nav-tabs">
         <li className="nav-item">
@@ -264,8 +266,9 @@ function CreateCourseTab({ user, showSuccess, showError }) {
     setMaterialsLoading(true);
     try {
       const res = await getMaterials();
-      if (res.ok && res.body && res.body.success) {
-        setAvailableMaterials(res.body.data || []);
+      console.log("get materials:", res)
+      if (res.success) {
+        setAvailableMaterials(res.data || []);
       }
     } catch (error) {
       console.error("Failed to load materials:", error);
@@ -277,6 +280,10 @@ function CreateCourseTab({ user, showSuccess, showError }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.materials || formData.materials.length === 0) {
+  alert("Please select at least one material before creating the course.");
+  return;
+}
     setLoading(true);
     
     try {
@@ -291,10 +298,10 @@ function CreateCourseTab({ user, showSuccess, showError }) {
         materials: formData.materials,
         isMandatory: formData.isMandatory
       };
-      
+      console.log("Create course API:",courseData);
       const res = await createCourse(courseData);
-      
-      if (res.ok && res.body && res.body.success) {
+      console.log("Get create course API:",res);
+      if (res.success) {
         showSuccess(
           "Course Created Successfully!",
           <div className="text-start">
@@ -325,7 +332,7 @@ function CreateCourseTab({ user, showSuccess, showError }) {
         setSearchTerm('');
         setIsDropdownOpen(false);
       } else {
-        const errorMsg = res.body?.message || 'Unknown error occurred';
+        const errorMsg = res.message || 'Unknown error occurred';
         showError(
           "Course Creation Failed",
           <div className="text-start">
@@ -441,6 +448,13 @@ function CreateCourseTab({ user, showSuccess, showError }) {
                     <option value="Cybersecurity">Cybersecurity</option>
                     <option value="Soft Skills">Soft Skills</option>
                     <option value="Management">Management</option>
+                    <option value="AI/ML">AI/ML</option>
+                    <option value="Blockchain">Blockchain</option>
+                    <option value="Testing">Software Testing</option>
+                    <option value="UI/UX">UI/UX Design</option>
+                    <option value="Game Dev">Game Development</option>
+                    <option value="Networking">Networking</option>
+                    <option value="IoT">Internet of Things</option>
                   </select>
                 </div>
               </div>
@@ -583,6 +597,9 @@ function CreateCourseTab({ user, showSuccess, showError }) {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                               />
+                              <button className="btn btn-primary">
+                                🔍 Search
+                              </button>
                             </div>
                           </div>
 
@@ -806,12 +823,13 @@ function CourseCatalogTab({ user, showSuccess, showError, showConfirm }) {
     setLoading(true);
     try {
       const res = await getAllCoursesForAdmin();
-      
-      if (res.ok && res.body && res.body.success) {
-        const coursesData = res.body.data || [];
+      console.log("Get All courses:", res);
+      if (res.success) {
+        const coursesData = res.data || [];
+console.log("Get courses:", coursesData)
         setCourses(coursesData);
       } else {
-        setCourses([]);
+        setCourses([res.body.data || []]);
         showError("Load Error", "Failed to load courses. Please try again.");
       }
     } catch (error) {
@@ -827,11 +845,17 @@ function CourseCatalogTab({ user, showSuccess, showError, showConfirm }) {
     setMaterialsLoading(true);
     try {
       const res = await getMaterials();
-      if (res.ok && res.body && res.body.success) {
-        setAvailableMaterials(res.body.data || []);
-      }
+      console.log("Get all Materials",res);
+      if (res?.success) {
+        setAvailableMaterials(res.data || []);
+      }else if (Array.isArray(res)) {
+      setAvailableMaterials(res);
+    }else {
+      setAvailableMaterials([]);
+    }
     } catch (error) {
       console.error("Failed to load materials:", error);
+      setAvailableMaterials([]);
     } finally {
       setMaterialsLoading(false);
     }
@@ -861,7 +885,7 @@ function CourseCatalogTab({ user, showSuccess, showError, showConfirm }) {
         res = await updateCourse(course.id, courseData);
       }
       
-      if (res.ok && res.body && res.body.success) {
+      if (res.success) {
         showSuccess(
           `Course ${newStatus === 'ACTIVE' ? 'Activated' : 'Deactivated'}!`,
           <div className="text-start">
@@ -928,7 +952,7 @@ function CourseCatalogTab({ user, showSuccess, showError, showConfirm }) {
 
       const res = await updateCourse(editingCourse.id, courseData);
       
-      if (res.ok && res.body && res.body.success) {
+      if (res.success) {
         showSuccess(
           "Course Updated Successfully!",
           <div className="text-start">
@@ -942,7 +966,7 @@ function CourseCatalogTab({ user, showSuccess, showError, showConfirm }) {
         setEditingCourse(null);
         loadCourses();
       } else {
-        const errorMessage = res.body?.message || 'Unknown error';
+        const errorMessage = res.message || 'Unknown error';
         showError(
           "Update Failed",
           <div className="text-start">
@@ -1313,90 +1337,81 @@ function CourseCatalogTab({ user, showSuccess, showError, showConfirm }) {
   </div>
 </div>
 
-      <div className="table-responsive">
-        <table className="table table-striped table-hover">
-          <thead className="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Duration</th>
-              <th>Type</th>
-              <th>Assignment</th>
-              <th>Materials</th>
-              <th>Status</th>
-              <th>Created By</th>
-              <th>Created Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentCourses.map(course => (
-              <tr key={course.id}>
-                <td>#{course.id}</td>
-                <td>
-                  <strong>{course.title}</strong>
-                  <br />
-                  <small className="text-muted">{course.description}</small>
-                </td>
-                <td>{course.category}</td>
-                <td>{course.durationHours}h</td>
-                <td>
-                  <span className={`badge ${course.paid || course.isPaid ? 'bg-warning' : 'bg-success'}`}>
-                    {course.paid || course.isPaid ? `Paid - $${course.price}` : 'Free'}
-                  </span>
-                </td>
-                <td>
-                  <span className={`badge ${course.isMandatory ? 'bg-warning' : 'bg-info'}`}>
-                    {course.isMandatory ? 'Mandatory' : 'Optional'}
-                  </span>
-                </td>
-                <td>
-                  <span className="badge bg-info">
-                    {course.materials ? course.materials.length : 0} 📎
-                  </span>
-                </td>
-                <td>
-                  <span className={`badge ${course.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'}`}>
-                    {course.status || 'ACTIVE'}
-                  </span>
-                </td>
-                <td>#{course.createdBy}</td>
-                <td>
-                  {course.createdAt ? new Date(course.createdAt).toLocaleDateString() : 'N/A'}
-                </td>
-                <td>
-                  <div className="btn-group">
-                    <button 
-                      className="btn btn-outline-warning btn-sm"
-                      onClick={() => startEdit(course)}
-                      title="Edit course"
-                    >
-                      ✏️
-                    </button>
-                    <button 
-                      className={`btn btn-sm ${course.status === 'ACTIVE' ? 'btn-success' : 'btn-danger'}`}
-                      onClick={() => handleStatusToggle(course)}
-                      style={{
-                        minWidth: '80px',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      {course.status === 'ACTIVE' ? '✓ Active' : '✗ Inactive'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        
-        {currentCourses.length === 0 && (
-          <div className="text-center py-4">
-            <p className="text-muted">No courses found</p>
-          </div>
-        )}
-      </div>
+     <div className="table-responsive">
+  <table className="table table-striped table-hover" style={{ tableLayout: 'fixed', minWidth: '900px' }}>
+    <thead className="table-dark">
+      <tr>
+        <th style={{ width: '50px', whiteSpace: 'nowrap' }}>ID</th>
+        <th style={{ width: '220px' }}>Title</th>
+        <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Category</th>
+        <th style={{ width: '80px', whiteSpace: 'nowrap' }}>Duration</th>
+        <th style={{ width: '90px', whiteSpace: 'nowrap' }}>Type</th>
+        <th style={{ width: '110px', whiteSpace: 'nowrap' }}>Assignment</th>
+        <th style={{ width: '90px', whiteSpace: 'nowrap' }}>Materials</th>
+        <th style={{ width: '90px', whiteSpace: 'nowrap' }}>Status</th>
+        <th style={{ width: '80px', whiteSpace: 'nowrap' }}>Created By</th>
+        <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Created Date</th>
+        <th style={{ width: '130px', whiteSpace: 'nowrap' }}>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentCourses.map(course => (
+        <tr key={course.id}>
+          <td style={{ whiteSpace: 'nowrap' }}>#{course.id}</td>
+          <td>
+            <strong>{course.title}</strong>
+            <br />
+            <small className="text-muted">{course.description}</small>
+          </td>
+          <td style={{ whiteSpace: 'nowrap' }}>{course.category}</td>
+          <td style={{ whiteSpace: 'nowrap' }}>{course.durationHours}h</td>
+          <td>
+            <span className={`badge ${course.paid || course.isPaid ? 'bg-warning' : 'bg-success'}`}>
+              {course.paid || course.isPaid ? `Paid` : 'Free'}
+            </span>
+          </td>
+          <td>
+            <span className={`badge ${course.isMandatory ? 'bg-warning' : 'bg-info'}`}>
+              {course.isMandatory ? 'Mandatory' : 'Optional'}
+            </span>
+          </td>
+          <td style={{ whiteSpace: 'nowrap' }}>
+            <span className="badge bg-info">
+              {course.materials ? course.materials.length : 0} 📎
+            </span>
+          </td>
+          <td>
+            <span className={`badge ${course.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'}`}>
+              {course.status || 'ACTIVE'}
+            </span>
+          </td>
+          <td style={{ whiteSpace: 'nowrap' }}>#{course.createdBy}</td>
+          <td style={{ whiteSpace: 'nowrap' }}>
+            {course.createdAt ? new Date(course.createdAt).toLocaleDateString() : 'N/A'}
+          </td>
+          <td>
+            <div className="btn-group">
+              <button
+                className="btn btn-outline-warning btn-sm"
+                onClick={() => startEdit(course)}
+                title="Edit course"
+              >
+                ✏️
+              </button>
+              <button
+                className={`btn btn-sm ${course.status === 'ACTIVE' ? 'btn-success' : 'btn-danger'}`}
+                onClick={() => handleStatusToggle(course)}
+                style={{ minWidth: '75px', fontWeight: 'bold' }}
+              >
+                {course.status === 'ACTIVE' ? '✓ Active' : '✗ Inactive'}
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
       {totalItems > 0 && <PaginationControls />}
     </div>
@@ -1423,8 +1438,8 @@ function CourseAssignmentsTab({ showSuccess, showError }) {
   const loadAssignments = async () => {
     try {
       const res = await getAssignments(filters);
-      if (res.ok && res.body && res.body.success) {
-        setAssignments(res.body.data || []);
+      if (res.success) {
+        setAssignments(res.data || []);
       } else {
         setAssignments([]);
         showError("Load Error", "Failed to load assignments. Please try again.");
@@ -1629,6 +1644,49 @@ function AssignCourseTab({ user, showSuccess, showError }) {
   const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
   const [showCourseDropdown, setShowCourseDropdown] = useState(false);
 
+  // ✅ ADD VALIDATION STATE VARIABLES
+  const [validationErrors, setValidationErrors] = useState({
+    employees: '',
+    courses: '',
+    dueDate: ''
+  });
+  const [touched, setTouched] = useState({
+    employees: false,
+    courses: false,
+    dueDate: false
+  });
+
+  const validateForm = () => {
+    const errors = {
+      employees: '',
+      courses: '',
+      dueDate: ''
+    };
+    let isValid = true;
+
+    if (!formData.employees || formData.employees.length === 0) {
+      errors.employees = 'Please select at least one employee';
+      isValid = false;
+    }
+
+    if (!formData.courseNames || formData.courseNames.length === 0) {
+      errors.courses = 'Please select at least one course';
+      isValid = false;
+    }
+
+    if (!formData.dueDate) {
+      errors.dueDate = 'Due date is required for course assignments';
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
+  const handleFieldBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
   useEffect(() => {
     loadAllEmployees();
     loadAllCourses();
@@ -1639,8 +1697,8 @@ function AssignCourseTab({ user, showSuccess, showError }) {
     setEmployeesLoading(true);
     try {
       const res = await getUsers();
-      if (res.ok && res.body && res.body.success) {
-        const employees = (res.body.data || []).filter(employee => 
+      if (res.success) {
+        const employees = (res.data || []).filter(employee => 
           employee.role === 'EMPLOYEE' || !employee.role
         ).map(employee => {
           const employeeName = employee.name || employee.fullName || `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.username || employee.email || 'Unknown User';
@@ -1674,9 +1732,9 @@ function AssignCourseTab({ user, showSuccess, showError }) {
     setCoursesLoading(true);
     try {
       const res = await getAllCoursesForAdmin();
-      if (res.ok && res.body && res.body.success) {
+      if (res.success) {
         // Filter to show only active courses and simplify data
-        const courses = (res.body.data || []).filter(course => 
+        const courses = (res.data || []).filter(course => 
           course.status === 'ACTIVE' || !course.status
         ).map(course => ({
           id: course.id,
@@ -1797,6 +1855,25 @@ function AssignCourseTab({ user, showSuccess, showError }) {
   // Submit bulk assignment
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ VALIDATION FIRST
+  if (!validateForm()) {
+    // Show error using your existing showError function
+    const errorMsg = [];
+    if (!formData.employees.length) errorMsg.push('• Please select at least one employee');
+    if (!formData.courseNames.length) errorMsg.push('• Please select at least one course');
+    
+    showError(
+      "Validation Error",
+      <div className="text-start">
+        <p><strong>Please fix the following:</strong></p>
+        <ul className="mb-0">
+          {errorMsg.map((msg, i) => <li key={i}>{msg}</li>)}
+        </ul>
+      </div>
+    );
+    return;
+  }
     
     if (formData.employees.length === 0) {
       showError("Selection Required", "Please select at least one employee.");
@@ -1809,56 +1886,57 @@ function AssignCourseTab({ user, showSuccess, showError }) {
     }
 
     // ✅ DUE DATE VALIDATION - Now mandatory
-    if (!formData.dueDate) {
-      showError("Due Date Required", "Please select a due date for the assignments.");
-      return;
-    }
+  if (!formData.dueDate) {
+    showError("Due Date Required", "Please select a due date for the assignments.");
+    setTouched(prev => ({ ...prev, dueDate: true }));
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
+  
+  try {
+    const assignmentData = {
+      employees: formData.employees.map(emp => ({
+        id: Number(emp.id),
+        employeeId: emp.employeeId,
+        name: emp.name,
+        email: emp.email || '',
+        department: emp.department || ''
+      })),
+      courseNames: formData.courseNames,
+      dueDate: formData.dueDate,
+      notes: formData.notes || '',
+      assignedBy: Number(user.id)
+    };
+
+    const res = await createBulkAssignment(assignmentData);
     
-    try {
-      const assignmentData = {
-        employees: formData.employees.map(emp => ({
-          id: Number(emp.id),
-          employeeId: emp.employeeId,
-          name: emp.name,
-          email: emp.email || '',
-          department: emp.department || ''
-        })),
-        courseNames: formData.courseNames,
-        dueDate: formData.dueDate, // ✅ Now required
-        notes: formData.notes || '',
-        assignedBy: Number(user.id)
-      };
-
-      const res = await createBulkAssignment(assignmentData);
+    if (res.success) {
+      const result = res.data;
       
-      if (res.ok && res.body && res.body.success) {
-        const result = res.body.data;
-        
-        showSuccess(
-          "Bulk Assignment Completed!",
-          <div className="text-start">
-            <p><strong>Total Assignments:</strong> {result.totalRequestedAssignments}</p>
-            <p><strong>Successful:</strong> {result.successfulAssignments}</p>
-            <p><strong>Failed:</strong> {result.failedAssignments}</p>
-            <p><strong>Due Date:</strong> {new Date(formData.dueDate).toLocaleDateString()}</p>
-            <p><strong>Summary:</strong> {result.summary}</p>
-            
-            {result.errors && result.errors.length > 0 && (
-              <div className="mt-3">
-                <strong>Errors:</strong>
-                <ul className="small mb-0">
-                  {result.errors.map((error, index) => (
-                    <li key={index}>
-                      {error.employeeName} - {error.courseName}: {error.errorMessage}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        );
+      showSuccess(
+        "Bulk Assignment Completed!",
+        <div className="text-start">
+          <p><strong>Total Assignments:</strong> {result.totalRequestedAssignments}</p>
+          <p><strong>Successful:</strong> {result.successfulAssignments}</p>
+          <p><strong>Failed:</strong> {result.failedAssignments}</p>
+          <p><strong>Due Date:</strong> {new Date(formData.dueDate).toLocaleDateString()}</p>
+          <p><strong>Summary:</strong> {result.summary}</p>
+          
+          {result.errors && result.errors.length > 0 && (
+            <div className="mt-3">
+              <strong>Errors:</strong>
+              <ul className="small mb-0">
+                {result.errors.map((error, index) => (
+                  <li key={index}>
+                    {error.employeeName} - {error.courseName}: {error.errorMessage}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      );
         
         // Reset form
         setFormData({
@@ -1887,9 +1965,33 @@ function AssignCourseTab({ user, showSuccess, showError }) {
       if (showEmployeeDropdown && !event.target.closest('.employee-dropdown-container')) {
         setShowEmployeeDropdown(false);
       }
+      <button
+  type="button"
+  className="btn btn-sm btn-outline-primary"
+  onClick={() => {
+    setShowEmployeeDropdown(false);
+    if (formData.employees.length === 0) {
+      setTouched(prev => ({ ...prev, employees: true }));
+    }
+  }}
+>
+  Close
+</button>
       if (showCourseDropdown && !event.target.closest('.course-dropdown-container')) {
         setShowCourseDropdown(false);
       }
+      <button
+  type="button"
+  className="btn btn-sm btn-outline-primary"
+  onClick={() => {
+    setShowCourseDropdown(false);
+    if (formData.courseNames.length === 0) {
+      setTouched(prev => ({ ...prev, courses: true }));
+    }
+  }}
+>
+  Close
+</button>
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -1907,25 +2009,30 @@ function AssignCourseTab({ user, showSuccess, showError }) {
             <form onSubmit={handleSubmit}>
               {/* Employee Selection Section */}
               <div className="mb-4 employee-dropdown-container">
-                <label className="form-label fw-bold">👥 Select Employees</label>
+                <label className="form-label fw-bold">👥 Select Employees
+                  <span class="text-danger">*</span>
+            </label>
+
                 <div className="form-text mb-2">
                   Click to select employees from the dropdown
                 </div>
                 
-                {/* Employee Dropdown with Checkboxes */}
-                <div className="dropdown">
-                  <button
-                    className="btn btn-outline-secondary dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center"
-                    type="button"
-                    onClick={() => setShowEmployeeDropdown(!showEmployeeDropdown)}
-                  >
-                    <span>
-                      {formData.employees.length > 0 
-                        ? `${formData.employees.length} employee(s) selected` 
-                        : 'Select employees...'}
-                    </span>
-                    <span className="ms-auto">🔽</span>
-                  </button>
+                 {/* Employee Dropdown with Checkboxes */}
+  <div className={`dropdown ${validationErrors.employees && touched.employees ? 'has-error' : ''}`}>
+    <button
+      className={`btn btn-outline-secondary dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center ${
+        validationErrors.employees && touched.employees ? 'border-danger' : ''
+      }`}
+      type="button"
+      onClick={() => setShowEmployeeDropdown(!showEmployeeDropdown)}
+    >
+      <span>
+        {formData.employees.length > 0 
+          ? `${formData.employees.length} employee(s) selected` 
+          : 'Select employees...'}
+      </span>
+      <span className="ms-auto">🔽</span>
+    </button>
                   
                   {showEmployeeDropdown && (
                     <div 
@@ -2002,6 +2109,12 @@ function AssignCourseTab({ user, showSuccess, showError }) {
                     </div>
                   )}
                 </div>
+                 {/* Validation Error Message */}
+                 {touched.employees && validationErrors.employees && (
+    <div className="text-danger mt-2 small">
+      ⚠️ {validationErrors.employees}
+    </div>
+  )}
 
                 {/* Show selected employees list */}
                 {formData.employees.length > 0 && (
@@ -2031,7 +2144,9 @@ function AssignCourseTab({ user, showSuccess, showError }) {
 
               {/* Course Selection Section */}
               <div className="mb-4 course-dropdown-container">
-                <label className="form-label fw-bold">📚 Select Courses</label>
+                <label className="form-label fw-bold">📚 Select Courses
+                  <span class="text-danger">*</span>
+                </label>
                 <div className="form-text mb-2">
                   Click to select courses from the dropdown
                 </div>
@@ -2119,25 +2234,34 @@ function AssignCourseTab({ user, showSuccess, showError }) {
                 </div>
               </div>
 
-              {/* Assignment Details - DUE DATE IS NOW MANDATORY */}
-              <div className="row mb-4">
-                <div className="col-md-6">
-                  <label className="form-label">
-                    Due Date <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.dueDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                    min={new Date().toISOString().split('T')[0]}
-                    required
-                  />
-                  <small className="form-text text-muted">
-                    ⚠️ Due date is required for course assignments
-                  </small>
-                </div>
-              </div>
+{/* Assignment Details - DUE DATE IS NOW MANDATORY */}
+<div className="row mb-4">
+  <div className="col-md-6">
+    <label className="form-label">
+      Due Date <span className="text-danger">*</span>
+    </label>
+    <input
+      type="date"
+      className={`form-control ${!formData.dueDate && touched.dueDate ? 'is-invalid' : ''}`}
+      value={formData.dueDate}
+      onChange={(e) => {
+        setFormData(prev => ({ ...prev, dueDate: e.target.value }));
+        setTouched(prev => ({ ...prev, dueDate: true }));
+      }}
+      onBlur={() => setTouched(prev => ({ ...prev, dueDate: true }))}
+      min={new Date().toISOString().split('T')[0]}
+      required
+    />
+    {!formData.dueDate && touched.dueDate && (
+      <div className="invalid-feedback d-block">
+        ⚠️ Due date is required for course assignments
+      </div>
+    )}
+    <small className="form-text text-muted">
+      ⚠️ Due date is required for course assignments
+    </small>
+  </div>
+</div>
 
               <div className="mb-4">
                 <label className="form-label">Assignment Notes (Optional)</label>
@@ -2166,22 +2290,32 @@ function AssignCourseTab({ user, showSuccess, showError }) {
               )}
 
               <div className="d-grid">
-                <button 
-                  type="submit" 
-                  className="btn btn-primary btn-lg"
-                  disabled={loading || formData.employees.length === 0 || formData.courseNames.length === 0 || !formData.dueDate}
-                >
-                  {loading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                      Creating {formData.employees.length * formData.courseNames.length} Assignments...
-                    </>
-                  ) : (
-                    `🚀 Assign ${formData.employees.length * formData.courseNames.length} Courses`
-                  )}
-                </button>
-              </div>
+  <button 
+    type="submit" 
+    className={`btn btn-primary btn-lg ${
+      (!formData.employees.length || !formData.courseNames.length || !formData.dueDate) ? 'disabled' : ''
+    }`}
+    disabled={loading || formData.employees.length === 0 || formData.courseNames.length === 0 || !formData.dueDate}
+    onClick={(e) => {
+      // Trigger validation on blur when trying to submit
+      if (!formData.employees.length) setTouched(prev => ({ ...prev, employees: true }));
+      if (!formData.courseNames.length) setTouched(prev => ({ ...prev, courses: true }));
+      if (!formData.dueDate) setTouched(prev => ({ ...prev, dueDate: true }));
+    }}
+  >
+    {loading ? (
+      <>
+        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+        Creating {formData.employees.length * formData.courseNames.length} Assignments...
+      </>
+    ) : (
+      `🚀 Assign ${formData.employees.length * formData.courseNames.length} Courses`
+    )}
+  </button>
+</div>
+              
             </form>
+            
 
             {/* Help Section */}
             <div className="mt-4 p-3 bg-light rounded">
@@ -2200,5 +2334,6 @@ function AssignCourseTab({ user, showSuccess, showError }) {
         </div>
       </div>
     </div>
+    
   );
 }

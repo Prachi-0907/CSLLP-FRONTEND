@@ -136,7 +136,7 @@ export default function CreateExamForm() {
     }
 
     try {
-      const creatorId = localStorage.getItem("userId") || 1;
+      const creatorId = localStorage.getItem("userId") || 2;
 
       const examPayload = {
         ...examData,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { authLogin, forgotPassword, verifyOtp, resetPassword } from '../services/api'; 
+import { authLogin, forgotPassword, verifyOtp, resetPassword, saveUserToStorage } from '../services/api'; 
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -20,19 +20,37 @@ export default function Login({ onLogin }) {
     e.preventDefault(); 
     setError(null);
     setIsLoading(true);
-    
+
     try {
       const res = await authLogin({ email, password, role });
-      if (!res.ok) {
-        setError(res.body && res.body.message ? res.body.message : 'Login failed');
+      
+      console.log("Login Response : ", res);
+      if(!res.success) {
+        setError(res.message || "Login failed");
         return;
       }
-      onLogin(res.body.data);
+      localStorage.setItem("token", res.data.token);
+      saveUserToStorage(res.data.user);
+      onLogin(res.data.user);
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      console.log(err);
+      setError(err.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
+    
+    // try {
+    //   const res = await authLogin({ email, password, role });
+    //   if (!res.ok) {
+    //     setError(res.body && res.body.message ? res.body.message : 'Login failed');
+    //     return;
+    //   }
+    //   onLogin(res.body.data);
+    // } catch (err) {
+    //   setError('An unexpected error occurred. Please try again.');
+    // } finally {
+    //   setIsLoading(false);
+    // }
   }
 
   // Forgot Password Functions
